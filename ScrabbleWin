@@ -1,0 +1,58 @@
+import itertools
+from collections import namedtuple
+
+def create_dictionary():
+        response = urllib2.urlopen('https://raw.githubusercontent.com/first20hours/google-10000-english/master/20k.txt')
+        html= response.read()
+        array = html.splitlines()
+        s = set(array)
+        return s
+
+#method to check whether a word is legit or not
+def check(word,dictionary):
+    found = False
+    vowel_check = word[:4]
+    if set('aeiouy').intersection(vowel_check):
+            for line in dictionary:
+                if word == line:
+                        found = True
+                        break
+    return found
+    
+#create scrabble points dictionary
+points_dictionary = {'a':1,'b':3,'c':3,'d':2,'e':1,'f':4,'g':2,'h':4,'i':1,'j':8,'k':5,'l':1,'m':3,'n':1,'o':1,'p':3,'q':10,'r':1,'s':1,'t':1,'u':1,'v':4,'w':4,'x':8,'y':4,'z':10}
+tiles_dictionary = {'a':9,'b':2,'c':2,'d':4,'e':12,'f':2,'g':3,'h':2,'i':9,'j':1,'k':1,'l':4,'m':2,'n':6,'o':8,'p':2,'q':1,'r':6,'s':4,'t':6,'u':4,'v':2,'w':2,'x':1,'y':2,'z':1}
+
+
+#check the value of each word
+def point_values(word):
+    count=0
+    word_length = len(word)
+    point_value = 0
+    while count<word_length:
+        letter_value = points_dictionary[word[count]]
+        point_value =point_value+letter_value
+        count = count+1
+    return point_value
+
+#creates a list of words from permutations
+def prefixes(word):
+    return [word[:i] for i in range(len(word))]
+
+def readwordlist():
+    wordset = create_dictionary()
+    prefixset = set(p for word in wordset for p in prefixes(word))
+    return wordset, prefixset
+
+WORDS, PREFIXES = readwordlist()
+
+def find_words(letters):
+    return extend_prefix('',letters,set())
+
+def extend_prefix(pre,letters,results):    
+    if pre in WORDS and len(pre)>2: results.add(pre)
+    if pre in PREFIXES:
+        for L in letters:
+            extend_prefix(pre+L, letters.replace(L,'',1),results)
+    results = sorted(results, reverse = True, key=point_values)
+    return results
