@@ -1,4 +1,11 @@
 import pyautogui
+import cv2
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd = 'C:/Program Files/Tesseract-OCR/tesseract.exe'
+
 
 myScreenshot = pyautogui.screenshot()
 myScreenshot.save('file name.png')
+img = cv2.imread('file name')
+text = pytesseract.image_to_string(img)
+print(text)
