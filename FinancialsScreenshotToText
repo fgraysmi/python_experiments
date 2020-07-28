@@ -1,0 +1,48 @@
+import cv2
+import pytesseract
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import csv
+from PIL import Image
+pytesseract.pytesseract.tesseract_cmd = 'C:/Program Files/Tesseract-OCR/tesseract.exe' #may need to change this based on where tesseract is installed
+
+file = 'file.png' #location of image file is here
+img = cv2.imread(file)
+img_array = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+height = img.shape[0]
+width = img.shape[1]
+
+#had to do a bit of a hack here - I'm using this to detect where the rows are based on the changing colors, then 'slicing' the image based on those rows
+rowCount=0
+rowCountList=[]
+currentVal=img_array[0][30]
+for row in img_array:
+    rowCount+=1
+    if row[30]!=currentVal and (row[30]==255 or row[30]==230):
+        currentVal=row[30]
+        rowCountList.append(rowCount)
+
+#this loops through each image slice and looks at the words in each of them
+fieldsAndValues=[]
+currentVal=0
+for imgSlice in rowCountList:
+    img1 = img_array[currentVal:imgSlice]
+    img1 = Image.fromarray(img1, 'L')
+    text = pytesseract.image_to_string(img1)
+    text=text.replace('$','')
+    text=text.replace('\n',' ')
+    values = text.split(' ')
+    for value in values:
+        if value=='':
+            values.remove(value)
+    if len(values)>=3:
+        firstYearValue = values[-2]
+        secondYearValue = values[-1]
+        fieldName = " ".join(values[:-2])
+        valuesList = [fieldName, firstYearValue, secondYearValue]
+        fieldsAndValues.append(valuesList)
+    currentVal=imgSlice
+
+df = pd.DataFrame(fieldsAndValues)
+df.to_csv('output.csv')
